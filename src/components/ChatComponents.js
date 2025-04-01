@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect } from "react";
-import { addDoc, collection, query, orderBy, limit, serverTimestamp, getDoc, doc } from "firebase/firestore";
+import { addDoc, collection, query, orderBy, limit, serverTimestamp, getDoc, doc, getDocs, where } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { useCollectionData } from "react-firebase-hooks/firestore";
@@ -17,6 +17,54 @@ export function ChatMessage(props) {
   const messageClass = uid === auth.currentUser?.uid ? "sent" : "received";
   const [userName, setUserName] = useState("");
   const [loading, setLoading] = useState(true);
+
+  // Function to start a direct message chat
+  const startDirectMessage = async () => {
+    // Don't allow starting a chat with yourself
+    if (uid === auth.currentUser?.uid) return;
+
+    try {
+      const chatsRef = collection(firestore, "chats");
+
+      // Check if a chat already exists
+      const q1 = query(
+          chatsRef,
+          where("participants", "array-contains", auth.currentUser.uid),
+          where("type", "==", "direct")
+      );
+
+      const querySnapshot = await getDocs(q1);
+
+      let existingChat = null;
+
+      querySnapshot.forEach((doc) => {
+        const chatData = doc.data();
+        if (chatData.participants.includes(uid)) {
+          existingChat = {
+            id: doc.id,
+            ...chatData
+          };
+        }
+      });
+
+      // If no existing chat, create a new one
+      if (!existingChat) {
+        await addDoc(chatsRef, {
+          type: "direct",
+          participants: [auth.currentUser.uid, uid],
+          createdAt: serverTimestamp(),
+          lastMessageTime: serverTimestamp(),
+          lastMessage: "No messages yet"
+        });
+      }
+
+      // You might want to add logic here to switch to the new/existing chat
+      // This would typically be handled by a parent component or context
+      console.log("Chat initiated with user:", uid);
+    } catch (error) {
+      console.error("Error starting chat:", error);
+    }
+  };
 
   useEffect(() => {
     // Fetch the username for this message
@@ -83,6 +131,8 @@ export function ChatMessage(props) {
           <img
               src={getAvatarSrc()}
               alt="Avatar"
+              onClick={startDirectMessage}
+              style={{cursor: uid !== auth.currentUser?.uid ? 'pointer' : 'default'}}
               onError={(e) => {
                 // Fallback if image fails to load
                 e.target.onerror = null;
