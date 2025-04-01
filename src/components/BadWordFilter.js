@@ -1,6 +1,7 @@
-import { Filter } from 'bad-words';
+import profanity from 'leo-profanity';
 
-const filter = new Filter();
+// Initialize the filter with English dictionary (default)
+profanity.loadDictionary();
 
 /**
  * Check if a message contains bad words
@@ -9,7 +10,7 @@ const filter = new Filter();
  */
 export const containsBadWords = (text) => {
   if (!text) return false;
-  return filter.isProfane(text);
+  return profanity.check(text);
 };
 
 /**
@@ -19,5 +20,5 @@ export const containsBadWords = (text) => {
  */
 export const filterBadWords = (text) => {
   if (!text) return text;
-  return filter.clean(text);
+  return profanity.clean(text);
 };
