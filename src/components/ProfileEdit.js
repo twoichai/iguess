@@ -107,11 +107,8 @@ export function ProfileEdit({ onClose }) {
                             onChange={(e) => setHideEmail(e.target.checked)}
                             disabled={loading}
                         />
-                        Hide my email address in search results
+                        Hide my email address
                     </label>
-                    <p className="privacy-description">
-                        When enabled, your email address will not be visible to other users when they search for contacts.
-                    </p>
                 </div>
 
                 {error && <p className="error-message">{error}</p>}
